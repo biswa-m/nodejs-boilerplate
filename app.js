@@ -31,12 +31,12 @@ switch (env) {
 mongoose
   .connect(config.mongo.host + config.mongo.database, {
     useNewUrlParser: true,
-    useUnifiedTopology: true
+    useUnifiedTopology: true,
   })
-  .then(function() {
+  .then(function () {
     debug("Connected to db");
   })
-  .catch(function(err) {
+  .catch(function (err) {
     debug(err);
     throw err;
   });
@@ -50,7 +50,7 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, "public")));
 app.use(cors());
 
-app.set('view engine', 'ejs');
+app.set("view engine", "ejs");
 
 var routes = require("./routes/index");
 app.use("/api", routes);
