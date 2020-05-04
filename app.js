@@ -8,8 +8,6 @@ var cors = require("cors");
 
 bbPromise = require("bluebird");
 
-mongoose.Promise = bbPromise;
-
 //Setup configuration based on environment
 env = process.env.NODE_ENV || "development";
 debug("Environment: " + env);
@@ -28,6 +26,11 @@ switch (env) {
     break;
 }
 
+mongoose.Promise = bbPromise;
+mongoose.set("useNewUrlParser", true);
+mongoose.set("useFindAndModify", false);
+mongoose.set("useCreateIndex", true);
+mongoose.set("useUnifiedTopology", true);
 mongoose
   .connect(config.mongo.host + config.mongo.database, {
     useNewUrlParser: true,

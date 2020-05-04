@@ -1,20 +1,18 @@
 var mongoose = require("mongoose");
 
-mongoose.set("useCreateIndex", true);
-
 var ObjectId = mongoose.Schema.Types.ObjectId;
 
 var ConnectedSocket = new mongoose.Schema(
   {
     socketId: {
       type: String,
-      unique: true
+      unique: true,
     },
     user: { type: ObjectId, ref: "User" },
     namespace: {
       type: String,
-      default: "/"
-    }
+      default: "/",
+    },
   },
   { timestamps: true }
 );
