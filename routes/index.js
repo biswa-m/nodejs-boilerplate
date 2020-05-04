@@ -5,7 +5,7 @@ router.get("/", function (req, res, next) {
   res.status(200).json({
     AppName: config.appName,
     Version: config.version,
-    Environment: env,
+    Environment: config.env,
   });
 });
 

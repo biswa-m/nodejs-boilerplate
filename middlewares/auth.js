@@ -1,8 +1,8 @@
 var jwt = require("jsonwebtoken");
-var debug = require("debug")("myapp-api:auth");
+var debug = require("debug")("myapp-api-auth");
 
 var authMiddleware = {
-  verifyUser: function(req, res, next) {
+  verifyUser: function (req, res, next) {
     var authorization = req.get("Authorization");
     if (authorization) {
       var token = authorization.match(/Bearer\s(\S+)/);
@@ -11,7 +11,7 @@ var authMiddleware = {
           var tokenInfo = jwt.verify(token[1], config.jwt.secret);
           req.user = {
             userId: tokenInfo.userId,
-            _id: tokenInfo.userId
+            _id: tokenInfo.userId,
           };
           next();
         } catch (ex) {
@@ -26,7 +26,7 @@ var authMiddleware = {
     }
   },
 
-  verifySocketUser: function(socket, next) {
+  verifySocketUser: function (socket, next) {
     if (socket.handshake.query && socket.handshake.query.token) {
       jwt.verify(
         socket.handshake.query.token,
@@ -44,7 +44,7 @@ var authMiddleware = {
       debug("AuthMiddleware.verifySocketUser: Error: Missing token");
       next(new Error("Authentication error"));
     }
-  }
+  },
 };
 
 module.exports = authMiddleware;

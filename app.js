@@ -1,30 +1,14 @@
-var debug = require("debug")("myapp-api:server");
+var debug = require("debug")("myapp-api-server");
 var express = require("express");
 var path = require("path");
 var cookieParser = require("cookie-parser");
 var logger = require("morgan");
 var mongoose = require("mongoose");
 var cors = require("cors");
-
 bbPromise = require("bluebird");
 
-//Setup configuration based on environment
-env = process.env.NODE_ENV || "development";
-debug("Environment: " + env);
-switch (env) {
-  case "development":
-    config = require("./config").development;
-    debugModeOn = true;
-    break;
-  case "stagging":
-    config = require("./config").stagging;
-    debugModeOn = true;
-    break;
-  case "production":
-    config = require("./config").production;
-    debugModeOn = false;
-    break;
-}
+config = require("./config");
+debug("Environment: " + config.env);
 
 mongoose.Promise = bbPromise;
 mongoose.set("useNewUrlParser", true);
@@ -45,8 +29,10 @@ mongoose
   });
 
 var routes = require("./routes/index");
+var error = require("./middlewares/error");
 
 var app = express();
+
 app.set("view engine", "ejs");
 
 app.use(logger(config.logger));
@@ -57,42 +43,8 @@ app.use(cors());
 app.use("/api", routes);
 app.use("/static", express.static(path.join(__dirname, "public")));
 
-// Catch 404 and forward to error handler
-app.use(function (req, res, next) {
-  var err = new Error("Not found");
-  err.statusCode = 404;
-  next(err);
-});
-
-// Error handlers
-switch (env) {
-  case "development":
-  case "stagging":
-    app.use(function (err, req, res, next) {
-      console.log(err.stack);
-
-      res.status(err.statusCode || 500);
-      res.json({
-        error: {
-          message: err.message,
-          error: err,
-        },
-      });
-    });
-    break;
-
-  case "production":
-  default:
-    app.use(function (err, req, res, next) {
-      res.status(err.statusCode || 500);
-      res.json({
-        error: {
-          message: err.message,
-          error: {},
-        },
-      });
-    });
-    break;
-}
+app.use(error.converter); // if error is not an instanceOf APIError, convert it.
+app.use(error.notFound); // catch 404 and forward to error handler
+app.use(error.handler); // error handler, send stacktrace only during development
 
 module.exports = app;

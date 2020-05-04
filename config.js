@@ -1,50 +1,65 @@
-module.exports = {
-  development: {
-    appname: "myapp-api",
-    version: "0.5",
-    logger: "dev",
-    mongo: {
-      host: "mongodb://localhost/",
-      database: "myappDB"
-    },
-    jwt: {
-      issuer: "localhost",
-      audience: "http://locahost",
-      secret: "devSecretSymboDiff",
-      adminSecret: "devAdminSecretSymboDiff"
-    },
-    base_url: "http://localhost:3001"
+var config = {
+  appname: "myapp-api",
+  version: "0.5",
+  env: process.env.NODE_ENV || "development",
+  logger: "dev",
+  mongo: {
+    host: "mongodb://localhost/",
+    database: "myapp-dev",
   },
-  stagging: {
-    appname: "myapp-api",
-    version: "0.5",
-    logger: "dev",
-    mongo: {
-      host: "mongodb://localhost/",
-      database: "myappDB"
-    },
-    jwt: {
-      issuer: "localhost",
-      audience: "http://locahost",
-      secret: "someVeryRandomString(*#RUOJF:SKHF",
-      adminSecret: "someVeryRandomString#OFLDKN"
-    },
-    base_url: "http://localhost:3001"
+  jwt: {
+    exp: 1000 * 60 * 15,
+    secret: "SLDkfj43oi39509FSJL:j459uq908)#*@%)*",
+    adminSecret: "dksf(#$)Q(*lksdjflSLKJLSKFJLSKFJ#5w(#W%&",
   },
-  production: {
-    appname: "myapp-api",
-    version: "0.5",
-    logger: "combined",
-    mongo: {
-      host: "mongodb://localhost/",
-      database: "myappDB"
-    },
-    jwt: {
-      issuer: "localhost",
-      audience: "http://locahost",
-      secret: "someVeryRandomString(*#RUOJF:SKHF",
-      adminSecret: "someVeryRandomString#OFLDKN"
-    },
-    base_url: "http://localhost:3001"
-  }
+  socket: {
+    url: "localhost",
+    port: process.env.SOCKET_PORT || 3002,
+  },
+  baseUrl: "http://localhost:3001",
+  port: process.env.PORT || 3001,
 };
+
+switch (config.env) {
+  case "production":
+    config = {
+      ...config,
+      logger: "combined",
+      mongo: {
+        ...config.mongo,
+        database: "myapp",
+      },
+      socket: {
+        ...config.socket,
+        url: "localhost",
+        port: process.env.SOCKET_PORT || 5002,
+      },
+      baseUrl: "http://localhost:3001",
+      port: process.env.PORT || 5001,
+    };
+    break;
+
+  case "stagging":
+    config = {
+      ...config,
+      logger: "combined",
+      mongo: {
+        ...config.mongo,
+        database: "myapp",
+      },
+      socket: {
+        ...config.socket,
+        url: "localhost",
+        port: process.env.SOCKET_PORT || 4002,
+      },
+      baseUrl: "http://localhost:3001",
+      port: process.env.PORT || 4001,
+    };
+    break;
+
+  case "development":
+  default:
+    break;
+}
+
+module.exports = config;

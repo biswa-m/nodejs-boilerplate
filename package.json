@@ -16,6 +16,7 @@
     "ejs": "^3.1.2",
     "express": "^4.17.1",
     "express-validation": "^3.0.2",
+    "http-status": "^1.4.2",
     "jsonwebtoken": "^8.5.1",
     "mongoose": "^5.9.11",
     "mongoose-html": "^0.0.1",
