@@ -57,4 +57,42 @@ app.use(cors());
 app.use("/api", routes);
 app.use("/static", express.static(path.join(__dirname, "public")));
 
+// Catch 404 and forward to error handler
+app.use(function (req, res, next) {
+  var err = new Error("Not found");
+  err.status = 404;
+  next(err);
+});
+
+// Error handlers
+switch (env) {
+  case "development":
+  case "stagging":
+    app.use(function (err, req, res, next) {
+      console.log(err.stack);
+
+      res.status(err.status || 500);
+      res.json({
+        error: {
+          message: err.message,
+          error: err,
+        },
+      });
+    });
+    break;
+
+  case "production":
+  default:
+    app.use(function (err, req, res, next) {
+      res.status(err.status || err.name == "ValidationError" ? 400 : 500);
+      res.json({
+        error: {
+          message: err.message,
+          error: {},
+        },
+      });
+    });
+    break;
+}
+
 module.exports = app;
