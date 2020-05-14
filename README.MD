@@ -1,13 +1,14 @@
-## Run the app
+# Express Boilerplate
 
-    1.  Local development mode: 
-        
-        npm run start-dev
-    
-    2. Stagging mode: 
+ExpressJS boilerplate with Socket.IO, Mongoose for scalable projects.
 
-        npm run start-stage
-    
-    3. Prodcution mode: 
+### Includes
 
-        npm run start-prod
+- [ExpressJS](https://expressjs.com)
+- [NodeJS](https://nodejs.org/en/)
+- [Mongoose](http://mongoosejs.com/docs/guide.html)
+- [Socket.io](https://socket.io/docs)
+- [Nodemon](https://nodemon.io/)
+- [API-Docs](http://apidocjs.com)
+
+

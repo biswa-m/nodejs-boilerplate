@@ -1,6 +1,7 @@
 const httpStatus = require("http-status");
 const expressValidation = require("express-validation");
 const { Error } = require("../utils/api-response");
+const { env } = require("../config");
 
 /**
  * Error handler. Send stacktrace only during development
@@ -15,14 +16,13 @@ const handler = (err, req, res, next) => {
     stack: err.stack,
   };
 
-  if (config.env !== "development") {
+  if (env !== "development") {
     delete response.stack;
   }
   if (err.status) {
     res.status(err.status);
   } else {
     res.status(httpStatus.INTERNAL_SERVER_ERROR);
-    console.log(err);
   }
   res.json(response);
 };
@@ -38,18 +38,17 @@ exports.converter = (err, req, res, next) => {
   let convertedError = err;
 
   if (err instanceof expressValidation.ValidationError) {
-    let elements =
-      err.details &&
-      err.details.map((x) => {
-        return Object.keys(x)[0];
-      });
+    let customMsg = "";
 
-    let customMsg = elements.join(", ");
+    err.errors.forEach((element) => {
+      customMsg += `${element.field.join(".")}, `;
+    });
+    customMsg = customMsg.substring(0, customMsg.length - 2);
     convertedError = new Error({
-      errors: err.details,
+      errors: err.errors,
       message: `Please enter valid ${customMsg}`,
       stack: err.stack,
-      status: err.statusCode,
+      status: err.status,
     });
   } else if (!(err instanceof Error)) {
     convertedError = new Error({
