@@ -1,7 +1,10 @@
 require("dotenv").config();
 
+const port = process.env.PORT;
+
 /** Default config will remain same in all environments and can be over-ridded */
 let config = {
+  appName: "DoctorBuddy",
   allowedMedia: [
     "jpg",
     "jpeg",
@@ -17,60 +20,51 @@ let config = {
     "mp3",
     "pdf",
   ],
-  baseUrl: "http://localhost:3001",
   ddosConfig: {
-    burst: 100,
-    limit: 100,
+    burst: 500,
+    limit: 500,
   },
   emails: {
-    "api-key":
-      "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",
+    "api-key": "",
     from: {
-      email: "info@express.com",
-      name: "Express Boilerplate Platform",
+      email: "noreply@doctorbuddy.com",
+      name: "DoctorBuddy",
     },
-    templates: {
-      "invite-email": "",
-      "reset-password": "",
-      verification: "",
-    },
+    templates: {},
   },
-  env: process.env.NODE_ENV,
+  env: process.env.NODE_ENV || "development",
   fcm: { "server-key": "" },
   // JWT expiry time in minutes
-  jwtExpirationInterval: 60 * 12,
-  jwtSecret: "LJSDLFowuro3lesjf*&*&skfljw4r034ofjlsflskfj",
-  mediaTypes: ["photo", "video", "document"],
-  mongo: { host: "mongodb://localhost:27017/", database: "express" },
-  port: 3001,
-  roles: ["admin", "user"],
-  socketPort: 3002,
+  jwtExpirationInterval: 60 * 24 * 365,
+  jwtSecret: "jlksU^%*khskdfk9KHLKH9w392KHSLKADF",
+  enums: {
+    roles: ["admin", "user"],
+    mediaTypes: ["photo", "video", "document"],
+  },
+  mongo: { host: "mongodb://localhost:27017/", database: "doctorbuddy-test" },
+  port: port || 3001,
   socketUrl: "localhost",
   twilioConfig: {
-    // Your Account SID from www.twilio.com/console
     accountSid: "",
     authToken: "",
     from: "",
   },
-  website: "http://localhost:3000",
+  baseUrl: "http://localhost:" + (port || 3001) + "/api",
+  website: "http://localhost:" + (port || 3001),
   whitelist: null,
   logger: "dev",
 };
 
-if (process.env.NODE_ENV === "staging") {
+if (process.env.NODE_ENV === "stagging") {
   config = {
     ...config,
-    mongo: { host: "mongodb://localhost:27017/", database: "express-stage" },
-    whitelist: [],
+    // port: port || 3009,
+    // baseUrl: "http://appxolo.com:" + (port || 3009) + "/api",
+    // website: "http://appxolo.com:" + (port || 3009),
+
     logger: "combined",
   };
 } else if (process.env.NODE_ENV === "production") {
-  config = {
-    ...config,
-    mongo: { host: "mongodb://localhost:27017/", database: "express" },
-    whitelist: [],
-    logger: "combined",
-  };
 }
 
 module.exports = config;

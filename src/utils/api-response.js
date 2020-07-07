@@ -1,10 +1,12 @@
-const httpStatus = require("http-status");
+const httpStatus = require('http-status');
 
 /**
  * @extends Error
  */
 class ExtendableError extends Error {
-  constructor({ message, errors, status, isPublic, stack }) {
+  constructor({
+    message, errors, status, isPublic, stack,
+  }) {
     super(message);
     this.name = this.constructor.name;
     this.message = message;
@@ -29,11 +31,7 @@ class ApiError extends ExtendableError {
    * @param {boolean} isPublic - Whether the message should be visible to user or not.
    */
   constructor({
-    message,
-    errors,
-    stack,
-    status = httpStatus.INTERNAL_SERVER_ERROR,
-    isPublic = false,
+    message, errors, stack, status = httpStatus.INTERNAL_SERVER_ERROR, isPublic = false,
   }) {
     super({
       errors,
@@ -51,19 +49,19 @@ class ApiError extends ExtendableError {
  * @param {any} data Any data type array, object etc.
  */
 function success(typeOrMessage, data = null) {
-  let message = "";
+  let message = '';
 
   switch (typeOrMessage) {
-    case "FETCH":
-      message = "Data fetched successfully";
+    case 'FETCH':
+      message = 'Data fetched successfully';
       break;
 
-    case "UPDATE":
-      message = "Data updated successfully";
+    case 'UPDATE':
+      message = 'Data updated successfully';
       break;
 
-    case "DELETE":
-      message = "Data deleted successfully";
+    case 'DELETE':
+      message = 'Data deleted successfully';
       break;
 
     default:

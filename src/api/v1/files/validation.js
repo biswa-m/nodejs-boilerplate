@@ -5,12 +5,12 @@ module.exports = {
   download: {
     params: { _id: Joi.string().required() },
     query: {
-      accessToken: Joi.string().required(),
+      accessToken: Joi.string().optional(),
       format: Joi.string()
         .valid("png", "jpeg", "jpg", "mp4", "mov")
         .default("png"),
-      height: Joi.number().required(),
-      width: Joi.number().required(),
+      height: Joi.number(),
+      width: Joi.number(),
     },
   },
 };

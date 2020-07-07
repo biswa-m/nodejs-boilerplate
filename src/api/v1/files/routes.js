@@ -11,26 +11,27 @@ const routes = express.Router();
  * @apiDescription Upload file
  * @apiVersion 1.0.0
  * @apiName uploadFile
- * @apiGroup Files
+ * @apiGroup File
  * @apiPermission user
  *
  * @apiHeader {String} Authorization   User's access token
  *
- * @apiParam  {file}               file           file
- * @apiParam  {String=video,image} fileType       type of image
+ * @apiParam  {file}                          file           file
+ * @apiParam  {String=photo, video, document} fileType       type of image
+ * @apiParam  {Any} public       If provided, it will store file on public dir else cdn dir
  *
  * @apiError (Bad Request 400)   ValidationError  Some parameters may contain invalid values
  * @apiError (Unauthorized 401)  Unauthorized     Only authenticated users can create the data
  */
 
-routes.route("/").post(authorize(), controller.create);
+routes.route("/").post(authorize(null, true), controller.create);
 
 /**
  * @api {get} v1/files/:_id Download file
  * @apiDescription Download file
  * @apiVersion 1.0.0
  * @apiName getFile
- * @apiGroup Files
+ * @apiGroup File
  * @apiPermission public
  *
  * @apiParam  {number}                  width       desire width
@@ -42,20 +43,5 @@ routes.route("/").post(authorize(), controller.create);
  * @apiError (Unauthorized 401)  Unauthorized     Only authenticated users can create the data
  */
 routes.route("/:_id").get(validate(download), controller.download);
-
-/**
- * @api {get} v1/files/:_id Delete file
- * @apiDescription Delete file
- * @apiVersion 1.0.0
- * @apiName Delete any uploaded file
- * @apiGroup Files
- * @apiPermission public
- *
- * @apiError (Bad Request 400)   ValidationError  Some parameters may contain invalid values
- * @apiError (Unauthorized 401)  Unauthorized     Only authenticated users can create the data
- */
-routes
-  .route("/:_id")
-  .delete(validate(deleteFile), authorize(), controller.delete);
 
 module.exports = routes;

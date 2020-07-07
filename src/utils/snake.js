@@ -1,12 +1,11 @@
-const mongoose = require("mongoose");
+const mongoose = require('mongoose');
 
-const toCamel = (string) =>
-  string.replace(/([-_][a-z])/gi, ($1) =>
-    $1.toUpperCase().replace("-", "").replace("_", "")
-  );
+const toCamel = (string) => string.replace(/([-_][a-z])/gi, ($1) => $1
+  .toUpperCase()
+  .replace('-', '')
+  .replace('_', ''));
 
-const isObject = (args) =>
-  args === Object(args) && !Array.isArray(args) && typeof args !== "function";
+const isObject = (args) => args === Object(args) && !Array.isArray(args) && typeof args !== 'function';
 
 const keysToCamel = (args) => {
   if (isObject(args)) {
@@ -14,7 +13,7 @@ const keysToCamel = (args) => {
 
     Object.keys(args).forEach((k) => {
       if (mongoose.Types.ObjectId.isValid(args[k])) {
-        if (k.toLowerCase() === "_id") {
+        if (k.toLowerCase() === '_id') {
           n[k] = args[k];
         } else {
           n[toCamel(k)] = args[k];

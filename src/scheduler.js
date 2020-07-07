@@ -1,7 +1,7 @@
-const schedule = require("node-schedule");
+const schedule = require('node-schedule');
 
 module.exports = async () => {
-  if (process.env.NODE_ENV !== "development") {
+  if (process.env.NODE_ENV !== 'development') {
     const rule = new schedule.RecurrenceRule();
 
     rule.dayOfWeek = [0, 1, 2, 3, 4, 5, 6];

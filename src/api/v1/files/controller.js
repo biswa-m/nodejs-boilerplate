@@ -1,24 +1,13 @@
 const httpStatus = require("http-status");
 const path = require("path");
-const fs = require("fs");
-const Busboy = require("busboy");
 const mongoose = require("mongoose");
-const Files = require("./model");
-const { resizeImage, authorize } = require("../../../utils/methods");
+const { DateTime } = require("luxon");
+
+const File = require("../../../models/file");
 const { Error } = require("../../../utils/api-response");
+const fileService = require("../../../services/file-services");
 
-const asyncFsMkdir = Promise.promisify(fs.mkdir);
-
-async function mkDir(folderPath) {
-  if (!fs.existsSync(folderPath)) {
-    await asyncFsMkdir(folderPath, {
-      mode: "0777",
-      recursive: true,
-    });
-  }
-}
-
-/**
+/**gi
  * Add new file
  *
  * @public
@@ -26,56 +15,54 @@ async function mkDir(folderPath) {
 exports.create = async (req, res, next) => {
   try {
     const {
-      user: { id },
-      body: { fileType },
+      query: { fileType, public },
     } = req;
 
-    const busboy = new Busboy({ headers: req.headers });
+    const userData = req.user || {};
 
-    req.pipe(busboy);
+    const now = DateTime.local();
+    const todayStr = now.year + now.month + now.day;
+    const folder = `${userData._id || "anonymous"}/${todayStr}/`;
 
-    busboy.on("file", async (fieldName, file, filename, encoding, mimeType) => {
-      const userData = req.user;
-      const folderPath = path.join(__dirname, `../../../../cdn/${userData.id}`);
-      const extension = path.extname(filename);
-      const mongoObjectId = mongoose.Types.ObjectId();
-      const customFileName = mongoObjectId + extension;
+    debug({ fileType, body: req.body, query: req.query });
+    if (public) {
+      var cdnFolder = path.join(__dirname, `../../../../public/`);
+    } else {
+      var cdnFolder = path.join(__dirname, `../../../../cdn/`);
+    }
 
-      // make cdn folder if not exists
-      await mkDir(path.join(__dirname, "../../../../cdn/"));
-      // make user id based folder in cdn folder if not exist
-      await mkDir(folderPath);
-      // Create a write` stream of the new file
-      const fsStream = fs.createWriteStream(
-        path.join(folderPath, customFileName)
-      );
+    const folderPath = cdnFolder + folder;
 
-      // Pipe it trough
-      file.pipe(fsStream);
+    const mongoObjectId = mongoose.Types.ObjectId();
+    const customFileName = mongoObjectId;
 
-      // On finish of the upload
-      fsStream.on("close", async () => {
-        debug(
-          `'${filename}' is successfully uploaded as ${customFileName} in ${folderPath}`
-        );
+    return fileService
+      .write(
+        { req, folderPath, customFileName },
 
-        const saveFile = new Files({
-          _id: mongoObjectId,
-          file_extension: extension,
-          file_mime_type: mimeType,
-          file_original_name: filename,
-          file_size: 0,
-          file_type: fileType,
-          is_temp: false,
-          is_video: false,
-          user_id: id,
-        });
+        ({ file_path, file_extension, file_mime_type, file_original_name }) => {
+          const saveFile = new File({
+            _id: mongoObjectId,
+            file_path,
+            folder,
+            file_extension,
+            file_mime_type,
+            file_original_name,
+            file_size: 0,
+            file_type: fileType,
+            is_temp: false,
+            user_id: userData._id,
+          });
 
-        await saveFile.save();
-
-        res.status(httpStatus.CREATED).json({ _id: mongoObjectId });
-      });
-    });
+          return saveFile
+            .save()
+            .then((mongoObj) => {
+              return res.status(httpStatus.CREATED).json({ file: mongoObj });
+            })
+            .catch((e) => next(e));
+        }
+      )
+      .catch((e) => next(e));
   } catch (e) {
     next(e);
   }
@@ -88,12 +75,18 @@ exports.download = async (req, res, next) => {
       params: { _id },
     } = req;
 
-    await authorize(req, res, next);
+    let file;
 
-    const file = await Files.findOne({
-      _id,
-      is_deleted: false,
-    });
+    if (mongoose.Types.ObjectId.isValid(_id)) {
+      file = await File.findOne({
+        _id,
+      });
+    } else {
+      throw new Error({
+        message: "Invalid file id",
+        status: httpStatus.BAD_REQUEST,
+      });
+    }
 
     if (!file) {
       throw new Error({
@@ -102,56 +95,19 @@ exports.download = async (req, res, next) => {
       });
     }
 
-    const imagePath = `../../../../cdn/${file.user_id}/${file._id}${file.file_extension}`;
-
     // Set the content-type of the response
-    res.type(`image/${format || "png"}`);
 
-    const filePath = path.join(__dirname, imagePath);
-
-    // Get the re sized image
-    resizeImage(filePath, format, Number(width), Number(height)).pipe(res);
+    const filePath = file.file_path;
+    if (file.file_mime_type && file.file_mime_type.match("image")) {
+      // Get the re sized image
+      res.type(file.file_mime_type);
+      fileService
+        .resizeImage(filePath, format, Number(width), Number(height))
+        .pipe(res);
+    } else {
+      fileService.streamFile(req, res, next, filePath, file.file_mime_type);
+    }
   } catch (e) {
     next(e);
-  }
-};
-
-const deleteFile = async (fileId, userId) => {
-  const query = {
-    _id: fileId,
-    is_deleted: false,
-    user_id: userId,
-  };
-
-  // const file = await Files.findOne(query);
-  // if (!file) {
-  //   throw new Error({
-  //     message: 'File is deleted or you dont have permissions to delete this file',
-  //     status: httpStatus.BAD_REQUEST,
-  //   });
-  // }
-  // const imagePath = `../../../../cdn/${file.user_id}/${file._id}${file.file_extension}`;
-  // const filePath = path.join(__dirname, imagePath);
-  // fs.unlinkSync(filePath);
-
-  const result = await Files.findOneAndUpdate(query, { is_deleted: true });
-
-  return result;
-};
-
-exports.deleteFile = deleteFile;
-
-exports.delete = async (req, res, next) => {
-  try {
-    const {
-      params: { _id },
-      user,
-    } = req;
-
-    await deleteFile(_id, user._id);
-
-    return res.status(httpStatus.NO_CONTENT).json();
-  } catch (e) {
-    return next(e);
   }
 };

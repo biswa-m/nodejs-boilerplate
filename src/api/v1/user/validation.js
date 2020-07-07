@@ -45,8 +45,8 @@ module.exports = {
   changePassword: {
     ...headers,
     body: {
-      oldPassword: Joi.string().required().trim().min(8).max(16),
-      password: Joi.string().required().trim().min(8).max(16),
+      oldPassword: Joi.string().required().trim().min(4).max(16),
+      password: Joi.string().required().trim().min(4).max(16),
     },
   },
 
@@ -91,7 +91,7 @@ module.exports = {
         .lowercase()
         .trim()
         .label("Email or phone number"),
-      password: Joi.string().min(8).max(16).required().trim(),
+      password: Joi.string().min(4).max(16).required().trim(),
     },
   },
 
@@ -107,16 +107,20 @@ module.exports = {
   register: {
     body: {
       email: Joi.string().email().lowercase().trim().required(),
-      firstName: Joi.string().trim().lowercase().required(),
-      lastName: Joi.string().trim().lowercase().required(),
-      password: Joi.string().min(8).max(16).required().trim(),
+      fullName: Joi.string().trim().lowercase().required(),
+      gamerName: Joi.string().trim().lowercase(),
+      password: Joi.string().min(4).max(16).required().trim(),
+      phone: Joi.string()
+        .regex(/^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}$/im)
+        .required(),
+      tosAgreement: Joi.boolean().required(),
     },
   },
 
   // POST /v1/user/reset-password
   resetPassword: {
     body: {
-      password: Joi.string().required().min(8).trim().max(16),
+      password: Joi.string().required().min(4).trim().max(16),
       token: Joi.string().required(),
     },
   },
@@ -139,6 +143,23 @@ module.exports = {
     },
   },
 
+  // GET /v1/user/search
+  search: {
+    ...headers,
+    query: {
+      fullName: Joi.string().optional(),
+      gamerName: Joi.string().optional(),
+      email: Joi.string().optional(),
+      phone: Joi.string().optional(),
+      q: Joi.string().lowercase().optional(),
+      limit: Joi.number().optional(),
+      skip: Joi.number().optional(),
+    },
+  },
+
   // Get /v1/user/email-verification
-  verificationToken: { params: { token: Joi.string().required() } },
+  verificationToken: {
+    params: { token: Joi.string().required() },
+    query: { email: Joi.string().required() },
+  },
 };

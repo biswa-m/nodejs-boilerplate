@@ -1,5 +1,4 @@
-const User = require("./api/v1/user/model");
-const Sequence = require("./api/v1/admin/sequence-model");
+const User = require("./models/user");
 
 const createAdmin = async () => {
   // eslint-disable-next-line consistent-return
@@ -12,53 +11,32 @@ const createAdmin = async () => {
 
         return true;
       }
-      const admins = [
-        {
-          email: "admin@express.com",
-          first_name: "Admin",
-          is_verified: true,
-          last_name: "User",
-          password: "admin@123",
-          role: "admin",
-        },
-      ];
 
-      User.insertMany(admins, (error, response) => {
-        if (error) {
-          debug("Error creating admin user");
+      const admin = new User({
+        email: "admin@myapp.com",
+        first_name: "Admin",
+        is_verified: true,
+        last_name: "User",
+        password: "SJF9230lslf",
+        role: "admin",
+      });
+
+      return admin
+        .save()
+        .then((response) => {
+          debug("Admin user created \n", JSON.stringify(response), "\r\n");
 
           return true;
-        }
-        debug("Admin user created \n", JSON.stringify(response), "\r\n");
+        })
+        .catch((e) => {
+          debug("Error creating admin user", e);
 
-        return true;
-      });
-    }
-  });
-};
-
-const counter = async () => {
-  Sequence.findOne({}, (err, res) => {
-    if (err) {
-      debug("Error checking auto increment sequence \n");
-    } else if (res === null) {
-      Sequence({ counter: 1000 }).save((error, response) => {
-        if (error) {
-          debug("Error adding the auto increment counter \n");
-        } else {
-          debug("Auto increment counter set value ", response, "\n");
-        }
-      });
-    } else {
-      debug(
-        "Auto increment counter already there value \n Current counter value ",
-        res.counter
-      );
+          return true;
+        });
     }
   });
 };
 
 module.exports = {
-  counter,
   createAdmin,
 };

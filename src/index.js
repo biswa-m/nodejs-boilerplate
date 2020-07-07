@@ -1,35 +1,64 @@
-debug = require("debug")("wager-api");
+debug = require("debug")("myapp-api");
 
 // eslint-disable-next-line no-global-assign
 Promise = require("bluebird");
-const httpServer = require("http").createServer();
-const { port, env, socketUrl, socketPort } = require("./config");
-
-const server = require("./server");
-const database = require("./database");
-const scheduler = require("./scheduler");
-const { createAdmin, counter } = require("./bootstrap");
+const { port } = require("./config");
 
 const socket = require("./socket");
+const expressApp = require("./app");
+const database = require("./database");
+const scheduler = require("./scheduler");
+const { createAdmin } = require("./bootstrap");
 
-global.io = require("socket.io").listen(httpServer);
+expressApp.set("port", port);
+const httpServer = require("http").Server(expressApp);
+
+global.io = require("socket.io")(httpServer);
 
 socket.init();
 
 database.connect();
 
-server.listen(port, () => {
-  scheduler(server);
-  console.info(`Server started on port ${port} (${env})`);
-
+httpServer.listen(port);
+httpServer.on("error", onError);
+httpServer.on("listening", () => {
+  onListening();
+  scheduler();
   createAdmin();
-  counter();
 });
 
-httpServer.listen(socketPort, socketUrl, () => {
-  console.info(`Socket server started on ${socketUrl}:${socketPort}(${env})`);
-});
+const src = expressApp;
 
-const src = server;
+function onError(error) {
+  if (error.syscall !== "listen") {
+    throw error;
+  }
+
+  var bind = typeof port === "string" ? "Pipe " + port : "Port " + port;
+
+  // handle specific listen errors with friendly messages
+  switch (error.code) {
+    case "EACCES":
+      console.error(bind + " requires elevated privileges");
+      process.exit(1);
+      break;
+    case "EADDRINUSE":
+      console.error(bind + " is already in use");
+      process.exit(1);
+      break;
+    default:
+      throw error;
+  }
+}
+
+/**
+ * Event listener for HTTP server "listening" event.
+ */
+
+function onListening() {
+  var addr = httpServer.address();
+  var bind = typeof addr === "string" ? "pipe " + addr : "port " + addr.port;
+  debug("Listening on " + bind);
+}
 
 module.exports = src;

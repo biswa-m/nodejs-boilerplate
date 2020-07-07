@@ -1,18 +1,20 @@
 const httpStatus = require("http-status");
 const jwt = require("jwt-simple");
 const { DateTime } = require("luxon");
-const User = require("../api/v1/user/model");
+const User = require("../models/user");
 const { Error } = require("../utils/api-response");
 const { jwtSecret } = require("../config");
 
-const authorize = async (req, res, next) => {
+const authorize = async (req, res, next, role, alwaysAllow = false) => {
   try {
     const { authorization } = req.headers;
 
-    const apiError = new Error({
-      message: "Unauthorized",
-      status: httpStatus.UNAUTHORIZED,
-    });
+    const apiError = alwaysAllow
+      ? null
+      : new Error({
+          message: "Unauthorized",
+          status: httpStatus.UNAUTHORIZED,
+        });
 
     if (!authorization) {
       return next(apiError);
@@ -27,8 +29,8 @@ const authorize = async (req, res, next) => {
         apiError.message = "Malformed Token";
 
         await User.findOneAndUpdate(
-          { "sessions.access_token": token },
-          { $pull: { sessions: { access_token: token } } }
+          { "sessions.accessToken": token },
+          { $pull: { sessions: { accessToken: token } } }
         );
 
         return next(apiError);
@@ -38,8 +40,8 @@ const authorize = async (req, res, next) => {
         apiError.message = "Token Expired";
 
         await User.findOneAndUpdate(
-          { "sessions.access_token": token },
-          { $pull: { sessions: { access_token: token } } }
+          { "sessions.accessToken": token },
+          { $pull: { sessions: { accessToken: token } } }
         );
 
         return next(apiError);
@@ -67,11 +69,15 @@ const authorize = async (req, res, next) => {
         });
       }
 
+      if (role && user.role !== role) {
+        return next(apiError);
+      }
+
       req.user = user;
 
       return next();
     } catch (e) {
-      apiError.message = "Token Expired";
+      apiError && (apiError.message = "Token Expired");
 
       return next(apiError);
     }
@@ -85,5 +91,5 @@ const authorize = async (req, res, next) => {
   }
 };
 
-exports.authorize = (roles = User.roles) => (req, res, next) =>
-  authorize(req, res, next, roles);
+exports.authorize = (role, alwaysAllow = false) => (req, res, next) =>
+  authorize(req, res, next, role, alwaysAllow);

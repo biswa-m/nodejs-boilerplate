@@ -1,6 +1,6 @@
 const express = require("express");
 const fileRoutes = require("./files/routes");
-// const userRoutes = require('./user/routes');
+const userRoutes = require("./user/routes");
 
 const router = express.Router();
 
@@ -13,9 +13,9 @@ router.get("/status", (req, res) => res.send("OK"));
  */
 router.use("/docs", express.static("docs"));
 /**
- * GET v1/images
+ * GET v1/static
  */
-router.use("/images", express.static("public"));
+router.use("/static", express.static("public"));
 /**
  * GET v1/files
  */
@@ -23,6 +23,6 @@ router.use("/files", fileRoutes);
 /**
  * GET v1/user
  */
-// router.use('/user', userRoutes);
+router.use("/user", userRoutes);
 
 module.exports = router;
